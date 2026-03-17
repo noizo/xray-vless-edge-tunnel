@@ -1,0 +1,2 @@
+# xray-admin-vault ConfigMap: OCI_VAULT_SECRET_ID is a public resource OCID, not a secret
+KSV-0109

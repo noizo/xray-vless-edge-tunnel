@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: xray-config
+data:
+  config.json: |
+    {
+      "log": {
+        "loglevel": "info"
+      },
+      "inbounds": [
+        {
+          "port": 8443,
+          "protocol": "vless",
+          "settings": {
+            "clients": __CLIENTS__,
+            "decryption": "none"
+          },
+          "streamSettings": {
+            "network": "ws",
+            "wsSettings": {
+              "path": "/ws",
+              "headers": {
+                "Host": "hide.nikolaev.id"
+              }
+            }
+          }
+        }
+      ],
+      "outbounds": [
+        {
+          "protocol": "freedom",
+          "tag": "direct"
+        }
+      ]
+    }

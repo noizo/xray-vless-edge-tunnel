@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xray-admin
+  labels:
+    app: xray-admin
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: xray-admin
+  template:
+    metadata:
+      labels:
+        app: xray-admin
+    spec:
+      nodeSelector:
+        workload: data
+      serviceAccountName: xray-admin
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: xray-admin
+          image: ghcr.io/noizo/xray-vless-edge-tunnel:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          envFrom:
+            - configMapRef:
+                name: xray-admin-vault
+          env:
+            - name: SECRET_NAME
+              value: xray-users
+            - name: HOST
+              value: hide.nikolaev.id
+            - name: PORT
+              value: "443"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
