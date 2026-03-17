@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hide &amp; seek</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #06060e;
+  }
+
+  .bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(0,255,200,0.07), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 20%, rgba(200,120,255,0.06), transparent),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(0,120,255,0.04), transparent);
+  }
+  .bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent 0, transparent 60px, rgba(0,255,200,0.015) 60px, rgba(0,255,200,0.015) 61px),
+      repeating-linear-gradient(0deg, transparent 0, transparent 60px, rgba(200,120,255,0.012) 60px, rgba(200,120,255,0.012) 61px);
+  }
+  .bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 30%, rgba(6,6,14,0.6));
+  }
+
+  .panel {
+    position: relative;
+    z-index: 1;
+    padding: 2.2rem 2.5rem;
+    width: 90%;
+    max-width: 520px;
+    height: 420px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(12,14,24,0.55);
+    backdrop-filter: blur(40px) saturate(1.4);
+    -webkit-backdrop-filter: blur(40px) saturate(1.4);
+    border: 1px solid rgba(0,255,200,0.12);
+    border-radius: 20px;
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.5),
+      0 0 60px rgba(0,255,200,0.03),
+      0 0 0 0.5px rgba(0,255,200,0.06) inset;
+  }
+
+  h1 {
+    font-size: 1rem;
+    margin-bottom: 1.6rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  h1 .h { color: #0fc; text-shadow: 0 0 20px rgba(0,255,200,0.3); }
+  h1 .amp { color: rgba(255,255,255,0.1); margin: 0 0.15em; }
+  h1 .s { color: rgba(200,120,255,0.6); }
+
+  nav {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.8rem;
+    justify-content: center;
+  }
+  nav button {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.22);
+    padding: 0.55rem 1.6rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  nav button:hover {
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+  }
+  nav button.active-hide {
+    color: #0fc;
+    background: rgba(0,255,200,0.06);
+    border-color: rgba(0,255,200,0.2);
+    box-shadow: 0 0 16px rgba(0,255,200,0.06);
+  }
+  nav button.active-hide:hover {
+    background: rgba(0,255,200,0.1);
+    box-shadow: 0 0 24px rgba(0,255,200,0.1);
+  }
+  nav button.active-seek {
+    color: rgb(200,120,255);
+    background: rgba(200,120,255,0.06);
+    border-color: rgba(200,120,255,0.25);
+    box-shadow: 0 0 16px rgba(200,120,255,0.08);
+  }
+  nav button.active-seek:hover {
+    background: rgba(200,120,255,0.1);
+    box-shadow: 0 0 24px rgba(200,120,255,0.12);
+  }
+
+  .view { display: none; flex: 1; min-height: 0; overflow-y: auto; }
+  .view.active { display: flex; flex-direction: column; }
+  .view::-webkit-scrollbar { width: 4px; }
+  .view::-webkit-scrollbar-track { background: transparent; }
+  .view::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+  .view::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+  .form-row { display: flex; gap: 0.5rem; }
+  .form-row input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: #e0e0e0;
+    padding: 0.55rem 0.9rem;
+    font-family: inherit;
+    font-size: 0.88rem;
+    flex: 1;
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+  }
+  .form-row input::placeholder { color: rgba(255,255,255,0.15); }
+  .form-row input:focus {
+    outline: none;
+    background: rgba(0,255,200,0.03);
+    border-color: rgba(0,255,200,0.3);
+    box-shadow: 0 0 12px rgba(0,255,200,0.06);
+  }
+  .form-row button, .btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: rgba(0,255,200,0.55);
+    padding: 0.55rem 1.3rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+    transition: all 0.25s;
+  }
+  .form-row button:hover, .btn:hover {
+    background: rgba(0,255,200,0.06);
+    border-color: rgba(0,255,200,0.3);
+    color: #0fc;
+    box-shadow: 0 0 12px rgba(0,255,200,0.06);
+  }
+
+  .uri-box {
+    word-break: break-all;
+    font-size: 0.7rem;
+    color: rgba(0,255,200,0.4);
+    padding: 0.8rem;
+    background: rgba(0,255,200,0.02);
+    border: 1px solid rgba(0,255,200,0.08);
+    border-radius: 10px;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .uri-box:hover { border-color: rgba(0,255,200,0.25); }
+  .uri-box::after {
+    content: 'copy';
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+    color: rgba(0,255,200,0.2);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .uri-box.copied::after { content: 'copied'; color: #0fc; }
+
+  .user-list { list-style: none; }
+  .user-list li {
+    display: flex;
+    align-items: center;
+    padding: 0.55rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .user-list li:hover { background: rgba(0,255,200,0.02); }
+  .user-list .name { flex: 1; color: rgba(255,255,255,0.75); }
+  .user-list .uid { color: rgba(0,255,200,0.15); font-size: 0.72rem; margin-right: 0.8rem; }
+  .user-list .actions { display: flex; gap: 0.35rem; }
+  .user-list .btn {
+    padding: 0.2rem 0.65rem;
+    font-size: 0.72rem;
+    border-radius: 8px;
+    color: rgba(0,255,200,0.5);
+    border-color: rgba(0,255,200,0.1);
+    background: rgba(0,255,200,0.03);
+  }
+  .user-list .btn:hover {
+    color: #0fc;
+    border-color: rgba(0,255,200,0.3);
+    background: rgba(0,255,200,0.06);
+    box-shadow: 0 0 10px rgba(0,255,200,0.06);
+  }
+  .user-list .btn.del {
+    color: rgba(255,70,70,0.4);
+    border-color: rgba(255,70,70,0.08);
+    background: rgba(255,70,70,0.02);
+  }
+  .user-list .btn.del:hover {
+    color: #f55;
+    border-color: rgba(255,70,70,0.3);
+    background: rgba(255,70,70,0.05);
+    box-shadow: 0 0 10px rgba(255,70,70,0.06);
+  }
+
+  .empty { color: rgba(255,255,255,0.12); padding: 1rem 0; font-size: 0.85rem; text-align: center; }
+  .status { color: rgba(255,255,255,0.2); font-size: 0.78rem; margin-top: 0.8rem; text-align: center; }
+  .status.error { color: #f55; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,6,14,0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: rgba(18,22,35,0.7);
+    backdrop-filter: blur(40px) saturate(1.6);
+    -webkit-backdrop-filter: blur(40px) saturate(1.6);
+    border: 1px solid rgba(0,255,200,0.12);
+    border-radius: 20px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 60px rgba(0,255,200,0.03);
+    padding: 2rem;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+  }
+  .modal img {
+    max-width: 240px;
+    margin: 0 auto 1rem;
+    display: block;
+    image-rendering: pixelated;
+    border: 1px solid rgba(0,255,200,0.08);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.95);
+    padding: 8px;
+  }
+  .modal .close-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(0,255,200,0.15);
+    border-radius: 10px;
+    color: rgba(0,255,200,0.5);
+    padding: 0.4rem 1.4rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.78rem;
+    margin-top: 1rem;
+    transition: all 0.25s;
+  }
+  .modal .close-btn:hover {
+    border-color: #0fc;
+    color: #0fc;
+    background: rgba(0,255,200,0.06);
+  }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<div class="panel" id="panel">
+  <h1><span class="h">hide</span><span class="amp">&amp;</span><span class="s">seek</span></h1>
+
+  <nav>
+    <button class="active-hide" onclick="switchTab('hide')">hide</button>
+    <button onclick="switchTab('seek')">seek</button>
+  </nav>
+
+  <div id="v-hide" class="view active">
+    <div class="form-row">
+      <input type="text" id="name" placeholder="name" autocomplete="off">
+      <button onclick="addUser()">hide</button>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div id="v-seek" class="view">
+    <ul id="seek-list" class="user-list"></ul>
+    <div id="seek-empty" class="empty" style="display:none">no users</div>
+    <div id="seek-status" class="status"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="modal">
+    <img id="modal-qr" alt="QR">
+    <div class="uri-box" id="modal-uri" onclick="copyUri(this)"></div>
+    <button class="close-btn" onclick="document.getElementById('modal').classList.remove('active')">close</button>
+  </div>
+</div>
+
+<script>
+let users = [];
+
+async function loadUsers() {
+  try {
+    const res = await fetch('/api/users');
+    if (!res.ok) { console.error('loadUsers:', await res.text()); return; }
+    users = await res.json() || [];
+  } catch (e) { console.error('loadUsers:', e); }
+  renderSeek();
+}
+
+function renderSeek() {
+  const list = document.getElementById('seek-list');
+  const empty = document.getElementById('seek-empty');
+  if (!users.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = users.map(u => `
+    <li>
+      <span class="name">${esc(u.name)}</span>
+      <span class="uid">${esc(u.id.slice(0,8))}\u2026</span>
+      <span class="actions">
+        <button class="btn" onclick="seekUser('${esc(u.name)}')">seek</button>
+        <button class="btn del" onclick="obliterate('${esc(u.name)}')">obliterate</button>
+      </span>
+    </li>
+  `).join('');
+}
+
+async function switchTab(tab) {
+  document.querySelectorAll('nav button').forEach(b => {
+    b.className = b.textContent === tab ? 'active-' + tab : '';
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('v-' + tab).classList.add('active');
+  if (tab === 'seek') await loadUsers();
+}
+
+async function addUser() {
+  const input = document.getElementById('name');
+  const name = input.value.trim();
+  if (!name) return;
+  setStatus('status', 'hiding...');
+  const res = await fetch('/api/users', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name})
+  });
+  if (!res.ok) { setStatus('status', await res.text(), true); return; }
+  const created = await res.json();
+  users.push(created);
+  renderSeek();
+  input.value = '';
+  setStatus('status', 'hidden');
+  await seekUser(name);
+}
+
+async function seekUser(name) {
+  const res = await fetch(`/api/share/${encodeURIComponent(name)}`);
+  if (!res.ok) { setStatus('seek-status', await res.text(), true); return; }
+  const data = await res.json();
+  document.getElementById('modal-qr').src = 'data:image/png;base64,' + data.qr;
+  document.getElementById('modal-uri').textContent = data.uri;
+  document.getElementById('modal-uri').classList.remove('copied');
+  document.getElementById('modal').classList.add('active');
+}
+
+async function obliterate(name) {
+  if (!confirm(`obliterate ${name}?`)) return;
+  setStatus('seek-status', 'obliterating...');
+  const res = await fetch(`/api/users/${encodeURIComponent(name)}`, {method: 'DELETE'});
+  if (!res.ok) { setStatus('seek-status', await res.text(), true); return; }
+  users = users.filter(u => u.name !== name);
+  renderSeek();
+  setStatus('seek-status', 'obliterated');
+}
+
+function copyUri(el) {
+  navigator.clipboard.writeText(el.textContent);
+  el.classList.add('copied');
+  setTimeout(() => el.classList.remove('copied'), 1500);
+}
+
+function setStatus(id, msg, err) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = err ? 'status error' : 'status';
+  if (!err) setTimeout(() => { el.textContent = ''; }, 2500);
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+document.getElementById('name').addEventListener('keydown', e => { if (e.key === 'Enter') addUser(); });
+loadUsers();
+</script>
+</body>
+</html>

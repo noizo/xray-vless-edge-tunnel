@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: xray-admin
+spec:
+  selector:
+    app: xray-admin
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP

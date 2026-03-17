@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xray
+  labels:
+    app: xray
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: xray
+  template:
+    metadata:
+      labels:
+        app: xray
+    spec:
+      nodeSelector:
+        workload: data
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: merge-config
+          image: alpine:3
+          command: ["sh", "-c"]
+          args:
+            - |
+              sed "s|__CLIENTS__|$(cat /etc/xray-users/users.json | tr -d '\n')|" \
+                /etc/xray-template/config.json > /etc/xray/config.json
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config-template
+              mountPath: /etc/xray-template
+              readOnly: true
+            - name: users
+              mountPath: /etc/xray-users
+              readOnly: true
+            - name: config
+              mountPath: /etc/xray
+      containers:
+        - name: xray
+          image: ghcr.io/xtls/xray-core:latest
+          args:
+            - run
+            - -config
+            - /etc/xray/config.json
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          ports:
+            - containerPort: 8443
+              name: vless
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/xray
+              readOnly: true
+      volumes:
+        - name: config-template
+          configMap:
+            name: xray-config
+        - name: users
+          secret:
+            secretName: xray-users
+        - name: config
+          emptyDir: {}
