@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared
+data:
+  config.yaml: |
+    tunnel: xray-tunnel
+    credentials-file: /etc/cloudflared/credentials.json
+    metrics: 0.0.0.0:2000
+    no-autoupdate: true
+    ingress:
+      - hostname: hide.example.com
+        service: http://xray.xray:8443
+      - hostname: xadmin.example.com
+        service: http://xray-admin.xray:8080
+      - service: http_status:404
