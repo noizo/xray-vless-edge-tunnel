@@ -23,6 +23,7 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
       containers:
