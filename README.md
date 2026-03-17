@@ -1,9 +1,15 @@
-# xray-vless-edge-tunnel
+<p align="center">
+  <img src="assets/logo.png" alt="xray-vless-edge-tunnel" width="128">
+</p>
 
-[![build](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/build.yaml/badge.svg)](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/build.yaml)
-[![ci](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/ci.yaml/badge.svg)](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/ci.yaml)
+<h1 align="center">xray-vless-edge-tunnel</h1>
 
-VLESS proxy with a web admin panel for user management. Designed for Kubernetes clusters with ArgoCD, with optional cloud vault backup for user data.
+<p align="center">
+  <a href="https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/build.yaml"><img src="https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/build.yaml/badge.svg" alt="build"></a>
+  <a href="https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/ci.yaml"><img src="https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/ci.yaml/badge.svg" alt="ci"></a>
+</p>
+
+<p align="center">VLESS proxy with a web admin panel for user management.<br>Designed for Kubernetes clusters with ArgoCD, with optional cloud vault backup for user data.</p>
 
 ## Architecture
 
@@ -31,7 +37,7 @@ flowchart TD
 
 - Kubernetes cluster (tested on K3s ARM64, works on any distro)
 - Container registry access for the admin image (GHCR by default)
-- Ingress controller, reverse proxy, or tunnel (Cloudflare Tunnel, nginx-ingress, Traefik, etc.)
+- Ingress controller, reverse proxy, or tunnel (see [Cloudflare Tunnel example](examples/cloudflared/), nginx-ingress, Traefik, etc.)
 
 ### Optional
 
