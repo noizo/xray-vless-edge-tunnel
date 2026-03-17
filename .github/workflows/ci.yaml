@@ -11,19 +11,48 @@ permissions:
   security-events: write
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.filter.outputs.go }}
+      k8s: ${{ steps.filter.outputs.k8s }}
+      scripts: ${{ steps.filter.outputs.scripts }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            go:
+              - 'cmd/admin/**'
+            k8s:
+              - 'deployments/kubernetes/**'
+              - 'examples/**'
+            scripts:
+              - 'scripts/**'
+            workflows:
+              - '.github/workflows/**'
+
   lint:
     name: Lint (shell, actions, k8s)
+    needs: [changes]
+    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflows == 'true' || needs.changes.outputs.k8s == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: ShellCheck
+        if: needs.changes.outputs.scripts == 'true'
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: scripts
           severity: warning
       - name: Actionlint
+        if: needs.changes.outputs.workflows == 'true'
         uses: raven-actions/actionlint@v2
       - name: Kubeconform
+        if: needs.changes.outputs.k8s == 'true'
         run: |
           curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
             | tar xz -C /usr/local/bin
@@ -35,6 +64,8 @@ jobs:
 
   go:
     name: Go (lint, vulncheck)
+    needs: [changes]
+    if: needs.changes.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -75,7 +106,8 @@ jobs:
 
   codeql:
     name: CodeQL (SAST)
-    needs: [go]
+    needs: [changes]
+    if: needs.changes.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
