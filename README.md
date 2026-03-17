@@ -1,9 +1,7 @@
 # xray-vless-edge-tunnel
 
 [![build](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/build.yaml/badge.svg)](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/build.yaml)
-[![lint](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/lint.yaml/badge.svg)](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/lint.yaml)
-[![trivy](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/trivy.yaml/badge.svg)](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/trivy.yaml)
-[![semgrep](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/semgrep.yaml)
+[![ci](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/ci.yaml/badge.svg)](https://github.com/noizo/xray-vless-edge-tunnel/actions/workflows/ci.yaml)
 
 VLESS proxy with a web admin panel for user management. Designed for Kubernetes clusters with ArgoCD, with optional cloud vault backup for user data.
 
@@ -152,9 +150,7 @@ Requires `kubectl`, `jq`, and `qrencode`.
 | Workflow | Trigger | Description |
 |----------|---------|-------------|
 | `build` | push to main (`cmd/admin/**`, `Dockerfile`) | Build and push ARM64 image to GHCR |
-| `lint` | push/PR to main | ShellCheck, golangci-lint, govulncheck, actionlint, kubeconform |
-| `trivy` | push/PR to main | IaC misconfiguration and secret scanning |
-| `semgrep` | push/PR to main | SAST analysis |
+| `ci` | push/PR to main | ShellCheck, actionlint, golangci-lint, govulncheck, kubeconform, Trivy, CodeQL |
 
 The Docker image is built for `linux/arm64`. To build for other architectures, update the `platforms` field in `.github/workflows/build.yaml`.
 
