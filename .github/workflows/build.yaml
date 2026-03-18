@@ -7,6 +7,8 @@ on:
       - "cmd/admin/**"
       - "Dockerfile"
       - ".github/workflows/build.yaml"
+  schedule:
+    - cron: "0 4 * * 1"
   workflow_dispatch:
 
 env:
