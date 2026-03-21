@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: xray-tunnel
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: hide.nikolaev.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: xray
+                port:
+                  number: 8443
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: xray-admin-tunnel
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: xadmin.nikolaev.id
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: xray-admin
+                port:
+                  number: 8080

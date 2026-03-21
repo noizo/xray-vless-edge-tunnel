@@ -5,6 +5,7 @@ resources:
   - secret.yaml
   - deployment.yaml
   - service.yaml
+  - ingress.yaml
   - admin-rbac.yaml
   - admin-vault-config.yaml
   - admin-deployment.yaml
