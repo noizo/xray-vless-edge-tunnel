@@ -34,6 +34,7 @@ var (
 	secretName = env("SECRET_NAME", "xray-users")
 	vlessHost  = env("HOST", "hide.nikolaev.id")
 	vlessPort  = env("PORT", "443")
+	basePath   string
 
 	backend SecretBackend
 )
@@ -45,10 +46,24 @@ func env(key, fallback string) string {
 	return fallback
 }
 
+// normalizeBasePath returns a non-empty path starting with "/" and no trailing slash.
+func normalizeBasePath(p string) string {
+	p = strings.TrimSpace(p)
+	p = strings.TrimSuffix(p, "/")
+	if p == "" || p == "/" {
+		return "/admin"
+	}
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+	return p
+}
+
 func main() {
+	basePath = normalizeBasePath(env("BASE_PATH", "/admin"))
 	log.Printf("starting xray-admin")
-	log.Printf("config: namespace=%s secret=%s host=%s port=%s",
-		namespace, secretName, vlessHost, vlessPort)
+	log.Printf("config: namespace=%s secret=%s host=%s port=%s basePath=%s",
+		namespace, secretName, vlessHost, vlessPort, basePath)
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -76,11 +91,12 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", serveIndex)
-	mux.HandleFunc("GET /api/users", listUsers)
-	mux.HandleFunc("POST /api/users", addUser)
-	mux.HandleFunc("DELETE /api/users/{name}", deleteUser)
-	mux.HandleFunc("GET /api/share/{name}", shareUser)
+	p := basePath
+	mux.HandleFunc("GET "+p+"/", serveIndex)
+	mux.HandleFunc("GET "+p+"/api/users", listUsers)
+	mux.HandleFunc("POST "+p+"/api/users", addUser)
+	mux.HandleFunc("DELETE "+p+"/api/users/{name}", deleteUser)
+	mux.HandleFunc("GET "+p+"/api/share/{name}", shareUser)
 
 	addr := ":8080"
 	log.Printf("listening on %s", addr)
@@ -141,8 +157,9 @@ func syncToBackend(users []User) {
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
 	data, _ := indexHTML.ReadFile("index.html")
+	html := strings.Replace(string(data), "__BASE_HREF__", basePath+"/", 1)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write(data) // nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- embedded static HTML, no user input
+	_, _ = w.Write([]byte(html)) // nosemgrep: go.lang.security.audit.xss.no-direct-write-to-responsewriter.no-direct-write-to-responsewriter -- embedded static HTML, no user input
 }
 
 func getUsers(ctx context.Context) ([]User, error) {

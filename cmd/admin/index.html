@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<base href="__BASE_HREF__">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>hide &amp; seek</title>
 <style>
@@ -327,7 +328,7 @@ let users = [];
 
 async function loadUsers() {
   try {
-    const res = await fetch('/api/users');
+    const res = await fetch('api/users');
     if (!res.ok) { console.error('loadUsers:', await res.text()); return; }
     users = await res.json() || [];
   } catch (e) { console.error('loadUsers:', e); }
@@ -365,7 +366,7 @@ async function addUser() {
   const name = input.value.trim();
   if (!name) return;
   setStatus('status', 'hiding...');
-  const res = await fetch('/api/users', {
+  const res = await fetch('api/users', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({name})
@@ -380,7 +381,7 @@ async function addUser() {
 }
 
 async function seekUser(name) {
-  const res = await fetch(`/api/share/${encodeURIComponent(name)}`);
+  const res = await fetch(`api/share/${encodeURIComponent(name)}`);
   if (!res.ok) { setStatus('seek-status', await res.text(), true); return; }
   const data = await res.json();
   document.getElementById('modal-qr').src = 'data:image/png;base64,' + data.qr;
@@ -392,7 +393,7 @@ async function seekUser(name) {
 async function obliterate(name) {
   if (!confirm(`obliterate ${name}?`)) return;
   setStatus('seek-status', 'obliterating...');
-  const res = await fetch(`/api/users/${encodeURIComponent(name)}`, {method: 'DELETE'});
+  const res = await fetch(`api/users/${encodeURIComponent(name)}`, {method: 'DELETE'});
   if (!res.ok) { setStatus('seek-status', await res.text(), true); return; }
   users = users.filter(u => u.name !== name);
   renderSeek();
