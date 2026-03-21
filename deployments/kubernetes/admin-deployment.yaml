@@ -44,6 +44,8 @@ spec:
             - configMapRef:
                 name: xray-admin-vault
           env:
+            - name: BASE_PATH
+              value: "/admin"
             - name: SECRET_NAME
               value: xray-users
             - name: HOST
